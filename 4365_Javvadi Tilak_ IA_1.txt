@@ -1,0 +1,48 @@
+LAB_1
+1. 
+select count(Month), sum(Dataused) as Total_DataUsed from customerinteractions
+group by month having avg(DataUsed)
+order by Total_DataUsed;
+
+2. select count(Month), sum(Dataused) as Total_DataUsed from customerinteractions
+group by month having avg(DataUsed)
+order by Total_DataUsed;
+
+3. select CustomerID, MessageCount, DataUsed from customerinteractions
+order by MessageCount, DataUsed desc;
+
+LAB_2
+
+4. 
+select DISTINCT ProductTypeID, sum(TotalSalesAmount) from quarterlysales
+group by ProductTypeID;
+
+5. 
+select ProductTypeID, sum(TotalSalesAmount) from quarterlysales where Quarter="Q1"
+group by ProductTypeID;
+
+6.
+SELECT DISTINCT ProductTypeID, avg(TotalSalesAmount), Quarter from quarterlysales
+where Quarter = "Q2" and ProductTypeID=1
+group by ProductTypeID;
+
+7. 
+select DISTINCT Region, EnergySource, avg(ConsumptionKWh) from sectorenergyconsumption
+where month="March" and EnergySource IN ("Solar", "Wind")
+group by Region;
+
+8. 
+
+select count(Month), Sector ,sum(ConsumptionKWh) from sectorenergyconsumption
+group by Sector having sum(ConsumptionKWh);
+
+
+9. 
+
+select SUM(ConsumptionKWh), EnergySource from sectorenergyconsumption
+where Month= "february"
+group by EnergySource;
+
+10. NA
+11. NA
+12. NA

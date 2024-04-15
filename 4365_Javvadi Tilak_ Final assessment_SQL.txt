@@ -1,0 +1,111 @@
+SQL Final Assessment - 15/04/24
+
+q1.
+
+with avg_sales as
+(
+select p.product_name, sr.product_id, p.product_category,
+	avg(sr.sales_amount) over (partition by product_category order by sales_amount) as Average_sales,
+    DATEdiff (current_date, sales_date)>30 as past_month
+    from products p
+    join sales_records sr on p.product_id= sr.product_id
+)
+select * from avg_sales
+
+q2.
+
+With Total_rev as 
+(
+select 
+	p.product_id, p.product_name,
+    sum(sr.sales_amount) over (partition by product_category order by sr.sales_amount) as Total_revenue,
+	rank() over (order by sr.sales_amount desc) as Rank1
+    from products p
+    join sales_records sr on p.product_id= sr.product_id
+)
+select * from Total_rev limit 3;
+
+q3.
+with contribution as
+(
+select 	
+	c.customer_id,
+    c.customer_name,
+    sum(sr.sales_amount) over (partition by c.customer_id order by sr.sales_amount desc) as Total_rev
+    from customers c
+    join sales_records sr on c.customer_id = sr.customer_id
+)
+select * ,
+	rank() over (order by Total_rev desc) as Rank1
+ from contribution;
+
+q4.N/A
+
+q5.
+
+with avg_ticket_price as
+(
+select 	f.flight_id,
+		t.ticket_price,
+        f.flight_number,
+        avg(t.ticket_price) over ( order by t.ticket_price) as avg_price
+        from tickets t
+        join flights f on f.flight_id = t.flight_id
+)
+
+select flight_id, flight_number, avg_price
+    from avg_ticket_price;
+
+q6.
+with fli as
+(
+select 
+	f.flight_number,
+    f.departure_date,
+    count(t.ticket_id) over (partition by f.flight_number) as Total_tickets_sold,
+    sum(t.ticket_price) over ( order by t.ticket_price) as Total_sale
+from flights f
+join tickets t on f.flight_id = t.ticket_id
+)
+select * from fli;
+
+q7.
+with top_5 as
+(
+select 
+	p.passenger_id,
+    p.passenger_name,
+    first_value(ticket_price) over (partition by passenger_id order by ticket_price desc) as highest_spent,
+    last_value(ticket_price) over (partition by passenger_id order by ticket_price) as Least_spent
+    from passengers p 
+    inner join tickets t on p.passenger_id = t.passenger_id
+    join flights f on f.flight_id = t.flight_id
+)
+select * from top_5; 
+
+q8.N/A
+
+q9.
+with play as
+(
+select game_name,
+		p.player_name,
+        p.player_id,
+        count(p.player_id) over (partition by p.player_name) as Players
+from games g
+inner join playerscores ps on g.game_id = ps.player_id
+join players p on p.player_id = ps.player_id
+)
+select * from play;
+
+q10.N/A
+q11.N/A
+q12.N/A
+q13.N/A
+q14.N/A
+q15.N/A
+q16.N/A
+q17.N/A
+q18.N/A
+q19.N/A
+q20.N/A

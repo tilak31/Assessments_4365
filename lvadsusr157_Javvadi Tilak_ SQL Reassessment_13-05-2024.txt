@@ -1,0 +1,331 @@
+LAB-1 	
+Answer 1
+
+SELECT d.name AS director, COUNT(m.movie_id) AS total_movies, SUM(m.box_office_million) AS total_earnings
+FROM Directors d
+JOIN Movies m 
+ON d.director_id = m.director_id
+GROUP BY  d.name
+HAVING SUM(m.box_office_million) > 200
+order by 3 desc;
+
+
+Answer 2
+SELECT g.genre_name AS Genre,
+       AVG(m.box_office_million) AS average_earnings,
+       MAX(m.box_office_million) AS max_Earnings,
+       MIN(m.box_office_million) AS min_Earnings,
+       MAX(m.box_office_million) - MIN(m.box_office_million) AS variability
+FROM Movies m
+JOIN Movie_Genres mg 
+ON m.movie_id = mg.movie_id
+JOIN Genres g 
+ON mg.genre_id = g.genre_id
+WHERE YEAR(m.release_date) = 2023
+GROUP BY g.genre_name
+ORDER BY 2 DESC;
+
+
+Answer 3
+SELECT m.title AS movie_name,
+       m.release_date AS release_date,
+       m.box_office_million AS revenue
+FROM Movies m
+JOIN Movie_Genres mg 
+ON m.movie_id = mg.movie_id
+JOIN Genres g ON mg.genre_id = g.genre_id
+WHERE g.genre_name IN ('Science Fiction', 'Adventure')
+ORDER BY 2 DESC;
+
+
+Answer 4
+SELECT 
+    month(m.release_date) AS Month,
+    coalesce(genre_name,"Total") AS Genre,
+    COUNT(*) AS Number_of_Releases
+FROM 
+    Movies m
+JOIN 
+    Movie_Genres mg ON m.movie_id = mg.movie_id
+JOIN 
+    Genres g ON mg.genre_id = g.genre_id
+WHERE 
+    YEAR(m.release_date) = 2023
+GROUP BY 
+    MONTH(m.release_date), g.genre_name WITH ROLLUP;
+
+
+
+
+Answer 5
+SELECT 
+    coalesce(genre_name,"Grand Total") AS Genre,
+    SUM(m.box_office_million) AS revenue
+FROM 
+    Movies m
+JOIN 
+    Movie_Genres mg ON m.movie_id = mg.movie_id
+JOIN 
+    Genres g ON mg.genre_id = g.genre_id
+WHERE 
+    YEAR(m.release_date) = 2023
+GROUP BY 
+    g.genre_name with rollup 
+ORDER BY 
+    2 ASC ;
+
+
+Answer 6
+with cteA as(
+SELECT DISTINCT g.genre_name
+FROM Directors d
+JOIN Movies m ON d.director_id = m.director_id
+JOIN Movie_Genres mg ON m.movie_id = mg.movie_id
+JOIN Genres g ON mg.genre_id = g.genre_id
+WHERE d.name = 'Director A'),
+cteB as(
+SELECT DISTINCT g.genre_name
+FROM Directors d
+JOIN Movies m ON d.director_id = m.director_id
+JOIN Movie_Genres mg ON m.movie_id = mg.movie_id
+JOIN Genres g ON mg.genre_id = g.genre_id
+WHERE d.name = 'Director B')
+select *
+from cteA a
+where a.genre_name not in ( select genre_name from cteB)
+
+LAB-2
+
+Answers7
+SELECT s.supplier_name,
+       SUM(t.quantity * p.price) AS Total_Revenue
+FROM Transactions t
+JOIN products p 
+ON t.product_id = p.product_id
+JOIN suppliers s 
+ON p.supplier_id = s.supplier_id
+WHERE YEAR(t.transaction_date) = YEAR(CURRENT_DATE) - 1
+GROUP BY s.supplier_name
+ORDER BY 2 DESC
+LIMIT 3;
+
+
+Answer8
+SELECT 
+    p.product_name,
+    p.category,
+    p.price,
+    AVG(p2.price) AS avg_price,
+    p.price - AVG(p2.price) AS profit_margin
+FROM products p
+JOIN products p2 
+ON p.category = p2.category
+GROUP BY 1, 2, 3
+ORDER BY 2, 5 DESC;
+
+Answer9
+SELECT 
+    product_name,
+    price,
+    CASE 
+        WHEN price <= 50 THEN 'Low'
+        WHEN price <= 100 THEN 'Medium'
+        ELSE 'High'
+    END AS Price_Tier
+FROM 
+    products;
+
+Answer10
+SELECT
+    t.product_id,
+    p.category,
+    t.transaction_date,
+    t.quantity,
+    SUM(t.quantity) OVER (PARTITION BY p.category ORDER BY t.transaction_date) AS cumulative_sales_quantity
+FROM transactions t
+join products p
+on t.product_id=p.product_id
+ORDER BY 2,3;
+
+Answer11
+SELECT 
+    product_id,
+    product_name,
+    quantity,
+    DENSE_RANK() OVER (ORDER BY quantity DESC) AS Ranking
+FROM products
+ORDER BY 4
+LIMIT 5;
+
+
+
+
+Answer12
+SELECT 
+    DATE(transaction_date) AS Date,
+    COALESCE(SUM(quantity), 0) AS Products_Sold
+FROM transactions
+WHERE transaction_date BETWEEN '2023-01-01' AND '2023-01-30'
+GROUP BY DATE(transaction_date)
+ORDER BY DATE(transaction_date);
+
+lab3
+
+13)
+SELECT s.StudentID, s.Name
+FROM Students s
+LEFT JOIN Classes c ON s.ClassID = c.ClassID
+WHERE c.ClassID IS NULL;
+
+14)
+SELECT t.TeacherID, t.TeacherName
+FROM Teachers t
+LEFT JOIN Classes c ON t.TeacherID = c.TeacherID
+WHERE c.TeacherID IS NULL;
+
+15)
+SELECT Name FROM Students
+UNION
+SELECT TeacherName FROM Teachers;
+
+16)
+SELECT DISTINCT c.TeacherID, t.TeacherName
+FROM Classes c
+JOIN Students s ON c.ClassID = s.ClassID
+JOIN Grades g ON s.StudentID = g.StudentID
+JOIN Teachers t ON c.TeacherID = t.TeacherID
+WHERE g.Score > 95
+AND c.TeacherID IN (
+    SELECT c.TeacherID
+    FROM Classes c
+    JOIN Students s ON c.ClassID = s.ClassID
+    JOIN Grades g ON s.StudentID = g.StudentID
+    WHERE g.Score < 65
+);
+
+17)
+SELECT 
+    g1.StudentID,
+    s.Name AS StudentName,
+    g1.Subject AS PreviousSubject,
+    g1.Score AS PreviousScore,
+    g2.Subject AS CurrentSubject,
+    g2.Score AS CurrentScore
+FROM 
+    Grades g1
+JOIN 
+    Grades g2 ON g1.StudentID = g2.StudentID
+        AND g1.Subject <> g2.Subject -- Ensure different subjects
+        AND g1.Score < g2.Score -- Ensure improvement
+JOIN 
+    Students s ON g1.StudentID = s.StudentID
+WHERE 
+    g1.Subject IS NOT NULL
+    AND g2.Subject IS NOT NULL
+ORDER BY 
+    g1.StudentID, g1.Subject, g2.Subject;
+
+
+
+Lab 4
+
+18)
+SELECT 
+    e.result_id,
+    e.constituency_id,
+    e.candidate_id,
+    c.name AS candidate_name,
+    c.party AS candidate_party,
+    e.votes AS current_year_votes,
+    AVG(prev_e.votes) AS avg_previous_votes
+FROM 
+    Election_Results e
+JOIN 
+    Candidates c ON e.candidate_id = c.candidate_id
+LEFT JOIN 
+    (SELECT 
+         candidate_id,
+         constituency_id,
+         AVG(votes) AS votes
+     FROM 
+         Election_Results
+     WHERE 
+         election_year != 2024
+     GROUP BY 
+         candidate_id, constituency_id
+    ) AS prev_e ON e.candidate_id = prev_e.candidate_id AND e.constituency_id = prev_e.constituency_id
+WHERE 
+    e.election_year = 2024
+GROUP BY 
+    e.result_id, e.constituency_id, e.candidate_id, c.name, c.party, e.votes;
+
+
+19)
+
+WITH RankedResults AS (
+    SELECT 
+        constituency_id,
+        candidate_id,
+        votes,
+        ROW_NUMBER() 
+        OVER (PARTITION BY constituency_id ORDER BY votes DESC) AS ran
+    FROM 
+        Election_Results
+    WHERE 
+        election_year = 2024
+)
+
+SELECT 
+    r.constituency_id,
+    r.candidate_id,
+    c.name AS candidate_name,
+    c.party AS candidate_party,
+    r.votes,
+    r.ran,
+    r.votes - LEAD(r.votes) OVER (PARTITION BY r.constituency_id ORDER BY r.votes DESC) AS lead_votes
+FROM 
+    RankedResults r
+JOIN 
+    Candidates c ON r.candidate_id = c.candidate_id
+WHERE 
+    r.ran = 1;
+
+20)
+WITH CandidatePerformance AS (
+    SELECT 
+        e.constituency_id,
+        e.candidate_id,
+        e.election_year,
+        e.votes,
+        MAX(e.votes) OVER (PARTITION BY e.constituency_id, e.candidate_id) AS peak_votes,
+        AVG(e.votes) OVER (PARTITION BY e.constituency_id, e.candidate_id 
+                           ORDER BY e.election_year 
+                           ROWS BETWEEN 2 PRECEDING AND CURRENT ROW) AS moving_avg
+    FROM 
+        Election_Results e
+    WHERE 
+        e.election_year BETWEEN 2022 AND 2024
+)
+
+SELECT 
+    constituency_id,
+    candidate_id,
+    election_year,
+    votes,
+    peak_votes,
+    moving_avg
+FROM 
+    CandidatePerformance;
+
+
+
+
+
+
+
+
+
+
+
+
+
